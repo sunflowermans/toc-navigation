@@ -134,7 +134,7 @@ module Jekyll
         root_ul["class"] = "nav-list"
         stack << { level: min_level - 1, ul: root_ul }
 
-        headings.each do |h|
+        headings.each_with_index do |h, idx|
           while stack.size > 1 && h[:level] <= stack.last[:level]
             stack.pop
           end
@@ -156,22 +156,20 @@ module Jekyll
           parent_ul = stack.last[:ul]
           parent_ul.add_child(li)
 
-          # Prepare a child UL for deeper levels.
+          next_h = headings[idx + 1]
+          has_children = next_h && next_h[:level] > h[:level]
+          next unless has_children
+
+          # heading has nested headings so create the nested list and expander.
           child_ul = Nokogiri::XML::Node.new("ul", doc)
           child_ul["class"] = "nav-list"
           li.add_child(child_ul)
 
-          # If this heading has children, it needs an expander to reveal
-          # the nested list (jtd hides nested `.nav-list` by default).
+          # jtd hides nested `.nav-list` by default.
           ensure_expander!(doc, li, label: "Toggle section")
           li.add_class("active") if expand_by_default?
 
           stack << { level: h[:level], ul: child_ul }
-        end
-
-        # Remove trailing empty ULs (leaf nodes).
-        root_ul.css("li.nav-list-item > ul.nav-list").each do |ul|
-          ul.remove if ul.element_children.empty?
         end
 
         root_ul
