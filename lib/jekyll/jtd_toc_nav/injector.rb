@@ -58,7 +58,7 @@ module Jekyll
         nav_item = link.ancestors("li.nav-list-item").first
         return unless nav_item
 
-        # Remove any prior injection (incremental builds / multiple passes).
+        # Remove any prior injection
         nav_item.css("> ul.nav-list[data-jtd-toc-nav='true']").remove
 
         outline_ul = build_outline_ul(doc, headings)
@@ -83,7 +83,7 @@ module Jekyll
           next if h["id"].to_s.empty?
           classes = h["class"].to_s.split(/\s+/)
           next if classes.include?("no_toc")
-          # Avoid pulling headings from the TOC itself if it exists in content.
+          # Dont pull headings from the TOC itself if it exists in content.
           next if h.ancestors.any? { |a| a["id"] == "markdown-toc" || a["class"].to_s.split(/\s+/).include?("js-page-toc") }
 
           {
@@ -98,7 +98,7 @@ module Jekyll
         baseurl = @site.config["baseurl"].to_s
         baseurl = "" if baseurl == "/"
 
-        # Match how Just the Docs' JS accounts for trailing slash / .html.
+        # Match just-the-docs trailing slash / .html.
         candidates = []
         candidates << page_url
         candidates << "#{page_url}/" unless page_url.end_with?("/")
@@ -156,13 +156,13 @@ module Jekyll
           parent_ul = stack.last[:ul]
           parent_ul.add_child(li)
 
-          # Prepare a child UL for subsequent deeper headings.
+          # Prepare a child UL for deeper levels.
           child_ul = Nokogiri::XML::Node.new("ul", doc)
           child_ul["class"] = "nav-list"
           li.add_child(child_ul)
 
-          # If this heading ends up with children, it must have an expander to reveal
-          # the nested list (Just the Docs hides nested `.nav-list` by default).
+          # If this heading has children, it needs an expander to reveal
+          # the nested list (jtd hides nested `.nav-list` by default).
           ensure_expander!(doc, li, label: "Toggle section")
           li.add_class("active") if expand_by_default?
 
