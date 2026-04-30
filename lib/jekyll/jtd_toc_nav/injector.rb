@@ -33,11 +33,6 @@ module Jekyll
         DEFAULT_LEVELS
       end
 
-      def expand_by_default?
-        @site.config.fetch("sidebar_toc_expand", true) != false &&
-          @site.config.fetch("jtd_toc_nav_expand", true) != false
-      end
-
       def process!(page_like)
         return unless enabled?
         return if page_like.output.nil? || page_like.output.empty?
@@ -66,7 +61,6 @@ module Jekyll
 
         # Ensure current page can expand/collapse like other nav items.
         ensure_expander!(doc, nav_item, label: "Toggle page sections")
-        ensure_outline_link_toggle_script!(doc)
 
         nav_item.add_class("active")
         nav_item.add_child(outline_ul)
@@ -187,85 +181,6 @@ module Jekyll
 
         li.children.first.add_previous_sibling(button)
         button
-      end
-
-      def ensure_outline_link_toggle_script!(doc)
-        return if doc.at_css("script[data-jtd-toc-nav-outline-toggle='true']")
-
-        body = doc.at_css("body")
-        return unless body
-
-        script = Nokogiri::XML::Node.new("script", doc)
-        script["data-jtd-toc-nav-outline-toggle"] = "true"
-        script.content = <<~JS
-          (function () {
-            function setExpanded(li, expanded) {
-              if (!li) return;
-              if (expanded) li.classList.add("active");
-              else li.classList.remove("active");
-
-              var btn = li.querySelector(":scope > button.nav-list-expander");
-              if (btn) btn.setAttribute("aria-expanded", expanded ? "true" : "false");
-            }
-
-            function collapseDescendants(li) {
-              var descendants = li.querySelectorAll("li.nav-list-item.active");
-              for (var i = 0; i < descendants.length; i++) {
-                if (descendants[i] === li) continue;
-                setExpanded(descendants[i], false);
-              }
-            }
-
-            document.addEventListener("click", function (e) {
-              if (e.defaultPrevented) return;
-              if (e.button !== 0) return;
-              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-
-              var btn = e.target && e.target.closest ? e.target.closest("button.nav-list-expander") : null;
-              if (btn) {
-                var btnOutline = btn.closest("ul.nav-list[data-jtd-toc-nav='true']");
-                if (!btnOutline) return;
-
-                var btnLi = btn.closest("li.nav-list-item");
-                if (!btnLi) return;
-
-                var btnChildUl = btnLi.querySelector(":scope > ul.nav-list");
-                if (!btnChildUl) return;
-
-                e.preventDefault();
-                e.stopPropagation();
-
-                var btnIsExpanded = btnLi.classList.contains("active");
-                var btnNextExpanded = !btnIsExpanded;
-                setExpanded(btnLi, btnNextExpanded);
-                collapseDescendants(btnLi);
-                return;
-              }
-
-              var a = e.target && e.target.closest ? e.target.closest("a.nav-list-link") : null;
-              if (!a) return;
-
-              var outline = a.closest("ul.nav-list[data-jtd-toc-nav='true']");
-              if (!outline) return;
-
-              var href = a.getAttribute("href") || "";
-              if (href.charAt(0) !== "#") return;
-
-              var li = a.closest("li.nav-list-item");
-              if (!li) return;
-
-              var childUl = li.querySelector(":scope > ul.nav-list");
-              if (!childUl) return;
-
-              // Clicking the header text should only expand (never collapse).
-              if (li.classList.contains("active")) return;
-              setExpanded(li, true);
-              collapseDescendants(li);
-            }, true);
-          })();
-        JS
-
-        body.add_child(script)
       end
     end
   end

@@ -1,6 +1,6 @@
 ## jekyll-jtd-toc-nav
 
-A drop-in Jekyll plugin that injects the current page’s heading outline into the **Just the Docs** sidebar navigation (as nested `nav-list` items). It also injects a small inline script so clicking a heading in the injected outline expands/collapses its immediate children.
+A drop-in Jekyll plugin that injects the current page’s heading outline into the **Just the Docs** sidebar navigation (as nested `nav-list` items).
 
 ### Install
 
@@ -25,4 +25,3 @@ sidebar_toc: true
 
 - `sidebar_toc` (boolean): enable injection (default `false`)
 - `sidebar_toc_levels`: heading levels to include (default `"2..4"`)
-- `sidebar_toc_expand`: deprecated (no longer used)
