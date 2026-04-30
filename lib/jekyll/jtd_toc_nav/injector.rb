@@ -155,7 +155,7 @@ module Jekyll
           has_children = next_h && next_h[:level] > h[:level]
           next unless has_children
 
-          # This heading has nested headings; create the nested list and expander.
+          # This heading has subheadings. Nest them.
           child_ul = Nokogiri::XML::Node.new("ul", doc)
           child_ul["class"] = "nav-list"
           li.add_child(child_ul)
