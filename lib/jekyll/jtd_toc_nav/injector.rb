@@ -33,11 +33,6 @@ module Jekyll
         DEFAULT_LEVELS
       end
 
-      def expand_by_default?
-        @site.config.fetch("sidebar_toc_expand", true) != false &&
-          @site.config.fetch("jtd_toc_nav_expand", true) != false
-      end
-
       def process!(page_like)
         return unless enabled?
         return if page_like.output.nil? || page_like.output.empty?
@@ -160,14 +155,13 @@ module Jekyll
           has_children = next_h && next_h[:level] > h[:level]
           next unless has_children
 
-          # heading has nested headings so create the nested list and expander.
+          # This heading has subheadings. Nest them
           child_ul = Nokogiri::XML::Node.new("ul", doc)
           child_ul["class"] = "nav-list"
           li.add_child(child_ul)
 
           # jtd hides nested `.nav-list` by default.
           ensure_expander!(doc, li, label: "Toggle section")
-          li.add_class("active") if expand_by_default?
 
           stack << { level: h[:level], ul: child_ul }
         end
