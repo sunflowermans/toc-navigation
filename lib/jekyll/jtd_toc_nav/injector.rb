@@ -66,6 +66,7 @@ module Jekyll
 
         # Ensure current page can expand/collapse like other nav items.
         ensure_expander!(doc, nav_item, label: "Toggle page sections")
+        ensure_outline_link_toggle_script!(doc)
 
         nav_item.add_class("active")
         nav_item.add_child(outline_ul)
@@ -134,7 +135,7 @@ module Jekyll
         root_ul["class"] = "nav-list"
         stack << { level: min_level - 1, ul: root_ul }
 
-        headings.each do |h|
+        headings.each_with_index do |h, idx|
           while stack.size > 1 && h[:level] <= stack.last[:level]
             stack.pop
           end
@@ -156,22 +157,19 @@ module Jekyll
           parent_ul = stack.last[:ul]
           parent_ul.add_child(li)
 
-          # Prepare a child UL for deeper levels.
+          next_h = headings[idx + 1]
+          has_children = next_h && next_h[:level] > h[:level]
+          next unless has_children
+
+          # This heading has nested headings; create the nested list and expander.
           child_ul = Nokogiri::XML::Node.new("ul", doc)
           child_ul["class"] = "nav-list"
           li.add_child(child_ul)
 
-          # If this heading has children, it needs an expander to reveal
-          # the nested list (jtd hides nested `.nav-list` by default).
+          # jtd hides nested `.nav-list` by default.
           ensure_expander!(doc, li, label: "Toggle section")
-          li.add_class("active") if expand_by_default?
 
           stack << { level: h[:level], ul: child_ul }
-        end
-
-        # Remove trailing empty ULs (leaf nodes).
-        root_ul.css("li.nav-list-item > ul.nav-list").each do |ul|
-          ul.remove if ul.element_children.empty?
         end
 
         root_ul
@@ -189,6 +187,85 @@ module Jekyll
 
         li.children.first.add_previous_sibling(button)
         button
+      end
+
+      def ensure_outline_link_toggle_script!(doc)
+        return if doc.at_css("script[data-jtd-toc-nav-outline-toggle='true']")
+
+        body = doc.at_css("body")
+        return unless body
+
+        script = Nokogiri::XML::Node.new("script", doc)
+        script["data-jtd-toc-nav-outline-toggle"] = "true"
+        script.content = <<~JS
+          (function () {
+            function setExpanded(li, expanded) {
+              if (!li) return;
+              if (expanded) li.classList.add("active");
+              else li.classList.remove("active");
+
+              var btn = li.querySelector(":scope > button.nav-list-expander");
+              if (btn) btn.setAttribute("aria-expanded", expanded ? "true" : "false");
+            }
+
+            function collapseDescendants(li) {
+              var descendants = li.querySelectorAll("li.nav-list-item.active");
+              for (var i = 0; i < descendants.length; i++) {
+                if (descendants[i] === li) continue;
+                setExpanded(descendants[i], false);
+              }
+            }
+
+            document.addEventListener("click", function (e) {
+              if (e.defaultPrevented) return;
+              if (e.button !== 0) return;
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+              var btn = e.target && e.target.closest ? e.target.closest("button.nav-list-expander") : null;
+              if (btn) {
+                var btnOutline = btn.closest("ul.nav-list[data-jtd-toc-nav='true']");
+                if (!btnOutline) return;
+
+                var btnLi = btn.closest("li.nav-list-item");
+                if (!btnLi) return;
+
+                var btnChildUl = btnLi.querySelector(":scope > ul.nav-list");
+                if (!btnChildUl) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                var btnIsExpanded = btnLi.classList.contains("active");
+                var btnNextExpanded = !btnIsExpanded;
+                setExpanded(btnLi, btnNextExpanded);
+                collapseDescendants(btnLi);
+                return;
+              }
+
+              var a = e.target && e.target.closest ? e.target.closest("a.nav-list-link") : null;
+              if (!a) return;
+
+              var outline = a.closest("ul.nav-list[data-jtd-toc-nav='true']");
+              if (!outline) return;
+
+              var href = a.getAttribute("href") || "";
+              if (href.charAt(0) !== "#") return;
+
+              var li = a.closest("li.nav-list-item");
+              if (!li) return;
+
+              var childUl = li.querySelector(":scope > ul.nav-list");
+              if (!childUl) return;
+
+              // Clicking the header text should only expand (never collapse).
+              if (li.classList.contains("active")) return;
+              setExpanded(li, true);
+              collapseDescendants(li);
+            }, true);
+          })();
+        JS
+
+        body.add_child(script)
       end
     end
   end
