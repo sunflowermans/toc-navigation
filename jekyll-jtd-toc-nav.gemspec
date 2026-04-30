@@ -3,7 +3,7 @@
 Gem::Specification.new do |spec|
   spec.name          = "jekyll-jtd-toc-nav"
   spec.version       = "0.1.0"
-  spec.authors       = ["Chris"]
+  spec.authors       = ["directsun"]
   spec.email         = []
 
   spec.summary       = "Inject page heading outline into Just the Docs sidebar nav"
