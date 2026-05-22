@@ -9,13 +9,8 @@ module Jekyll
         @site = site
       end
 
-      def enabled?
-        @site.config.fetch("sidebar_toc", false) == true ||
-          @site.config.fetch("jtd_toc_nav", false) == true
-      end
-
       def levels
-        raw = @site.config["sidebar_toc_levels"] || @site.config["jtd_toc_nav_levels"]
+        raw = @site.config["sidebar_toc_levels"]
         return DEFAULT_LEVELS if raw.nil?
 
         if raw.is_a?(String) && raw.include?("..")
@@ -33,8 +28,11 @@ module Jekyll
         DEFAULT_LEVELS
       end
 
+      def expand_all?
+        @site.config.fetch("sidebar_toc_expand", true) != false
+      end
+
       def process!(page_like)
-        return unless enabled?
         return if page_like.output.nil? || page_like.output.empty?
 
         html = page_like.output
@@ -162,6 +160,7 @@ module Jekyll
 
           # jtd hides nested `.nav-list` by default.
           ensure_expander!(doc, li, label: "Toggle section")
+          li.add_class("active") if expand_all?
 
           stack << { level: h[:level], ul: child_ul }
         end
