@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name          = "jekyll-jtd-toc-nav"
-  spec.version       = "0.2.2"
+  spec.version       = "0.2.4"
   spec.authors       = ["directsun"]
   spec.email         = []
 
