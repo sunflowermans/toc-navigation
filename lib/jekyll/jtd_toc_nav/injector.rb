@@ -3,7 +3,7 @@
 module Jekyll
   module JtdTocNav
     class Injector
-      DEFAULT_LEVELS = (2..4).to_a
+      DEFAULT_LEVELS = (1..4).to_a
 
       def initialize(site:)
         @site = site

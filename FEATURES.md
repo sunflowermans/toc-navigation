@@ -30,7 +30,7 @@ If the plugin is listed under `plugins:` (and loaded via the Gemfile), injection
 
 | Key | Purpose | Default / notes |
 |-----|---------|-----------------|
-| `sidebar_toc_levels` | Which heading levels to include. | Defaults to **h2–h4** if omitted. |
+| `sidebar_toc_levels` | Which heading levels to include. | Defaults to **h1–h4** if omitted. |
 | `sidebar_toc_expand` | Add class `active` to outline items that have sub-headings so nested sections start expanded. | `true` if unset; set to `false` to start collapsed. |
 
 **Heading levels format**

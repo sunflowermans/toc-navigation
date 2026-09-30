@@ -23,5 +23,5 @@ plugins:
 
 ### Options
 
-- `sidebar_toc_levels`: heading levels to include (default `"2..4"`)
+- `sidebar_toc_levels`: heading levels to include (default `"1..4"`)
 - `sidebar_toc_expand`: expand all outline sections by default (default `true`; set to `false` to start collapsed)
